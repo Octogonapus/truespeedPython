@@ -1,13 +1,23 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import csv
 
 plt.rcParams['figure.figsize'] = (10, 8)
 
 # intial parameters
-z = np.genfromtxt("rpm.csv", delimiter=",")
+optimalRPM = np.linspace(0, 83, 1031)
+motorPower = np.linspace(0, 127, 1031)
+rpm = []
+with open('xhat.csv', 'r') as file:
+    re = csv.reader(file, delimiter=',')
+    for row in re:
+        rpm = row
+
+z = [tup[0] + float(tup[1]) for tup in zip(np.genfromtxt("rpm.csv", delimiter=","), rpm)]
+#z = np.genfromtxt("rpm.csv", delimiter=",")
 n_iter = len(z)
 sz = (n_iter,) # size of array
-x = -0.37727 # truth value (typo in example at top of p. 13 calls this z)
+#x = -0.37727 # truth value (typo in example at top of p. 13 calls this z)
 #z = np.random.normal(x,0.1,size=sz) # observations (normal about x, sigma=0.1)
 
 Q = 1e-5 # process variance
@@ -38,11 +48,16 @@ for k in range(1,n_iter):
 plt.figure()
 plt.plot(z,'k+',label='noisy measurements')
 plt.plot(xhat,'b-',label='a posteri estimate')
-plt.axhline(x,color='g',label='truth value')
+#plt.plot(motorPower,label='optimal rpm')
+#plt.axhline(x,color='g',label='truth value')
 plt.legend()
 plt.title('Estimate vs. iteration step', fontweight='bold')
 plt.xlabel('Iteration')
 plt.ylabel('Voltage')
+
+#with open('xhat.csv', 'w') as file:
+#    wr = csv.writer(file, delimiter=',')
+#    wr.writerow(xhat)
 
 #plt.figure()
 #valid_iter = range(1,n_iter) # Pminus not valid at step 0

@@ -62,7 +62,7 @@ for i in range(0, len(filtPowerSmooth), 3):
 
 plt.plot(rpm, label="Unfiltered RPM")
 plt.plot(rpmFilt, label="Filtered RPM")
-plt.plot([fifthOrder(x) for x in rpmFilt], label="5th order RPM")
+#plt.plot([fifthOrder(x) for x in rpmFilt], label="5th order RPM")
 #plt.plot(optimalRPM, label="Optimal RPM")
 #plt.plot(motorPower, label="Motor Power")
 #plt.plot(remappedPower, label="Remapped Power")

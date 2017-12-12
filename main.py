@@ -35,6 +35,9 @@ def findPowerForRPM(desiredRPMVal, measuredRPM, motorPower):
     idx = (np.abs(measuredRPM - desiredRPMVal)).argmin();
     return motorPower[idx]
 
+def fifthOrder(rpm):
+    return rpm * 0.5 + rpm * 0.25 + rpm * 0.125 + rpm * 0.0625 + rpm * 0.03125
+
 motorPower = [int(round(a)) for a in np.linspace(0,127,1031)]
 rpm = np.genfromtxt("rpm.csv", delimiter=",")
 demaInit()
@@ -57,12 +60,13 @@ for i in range(0, len(filtPowerSmooth), 3):
        if slice_from_index + 2 < len(filtPowerSmooth):
            filtPowerSmooth[slice_from_index + 2] = avg;
 
-#plt.plot(rpm, label="Unfiltered RPM")
+plt.plot(rpm, label="Unfiltered RPM")
 plt.plot(rpmFilt, label="Filtered RPM")
+plt.plot([fifthOrder(x) for x in rpmFilt], label="5th order RPM")
 #plt.plot(optimalRPM, label="Optimal RPM")
 #plt.plot(motorPower, label="Motor Power")
 #plt.plot(remappedPower, label="Remapped Power")
 #plt.plot(filtPower, label="Filtered Power")
-plt.plot(filtPowerSmooth, label="Filtered Power Smooth")
+#plt.plot(filtPowerSmooth, label="Filtered Power Smooth")
 plt.legend()
 plt.show()

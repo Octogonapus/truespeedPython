@@ -8,46 +8,85 @@ plt.rcParams['figure.figsize'] = (10, 8)
 optimalRPM = np.linspace(0, 83, 1031)
 motorPower = np.linspace(0, 127, 1031)
 rpm = []
-with open('xhat.csv', 'r') as file:
+with open('rpm.csv', 'r') as file:
     re = csv.reader(file, delimiter=',')
     for row in re:
         rpm = row
 
-z = [tup[0] + float(tup[1]) for tup in zip(np.genfromtxt("rpm.csv", delimiter=","), rpm)]
-#z = np.genfromtxt("rpm.csv", delimiter=",")
-n_iter = len(z)
-sz = (n_iter,) # size of array
-#x = -0.37727 # truth value (typo in example at top of p. 13 calls this z)
-#z = np.random.normal(x,0.1,size=sz) # observations (normal about x, sigma=0.1)
+z = np.genfromtxt("rpm.csv", delimiter=",")
 
-Q = 1e-5 # process variance
+print(np.var(z[900:]))
 
-# allocate space for arrays
-xhat=np.zeros(sz)      # a posteri estimate of x
-P=np.zeros(sz)         # a posteri error estimate
-xhatminus=np.zeros(sz) # a priori estimate of x
-Pminus=np.zeros(sz)    # a priori error estimate
-K=np.zeros(sz)         # gain or blending factor
+def func1():
+    #z = np.genfromtxt("rpm.csv", delimiter=",")
+    n_iter = len(z)
+    sz = (n_iter,) # size of array
+    #x = -0.37727 # truth value (typo in example at top of p. 13 calls this z)
+    #z = np.random.normal(x,0.1,size=sz) # observations (normal about x, sigma=0.1)
+    
+    Q = 0.2 # process variance
+    
+    # allocate space for arrays
+    xhat=np.zeros(sz)      # a posteri estimate of x
+    P=np.zeros(sz)         # a posteri error estimate
+    xhatminus=np.zeros(sz) # a priori estimate of x
+    Pminus=np.zeros(sz)    # a priori error estimate
+    K=np.zeros(sz)         # gain or blending factor
+    
+    R = 110.37 #0.17**2 # estimate of measurement variance, change to see effect
+    
+    # intial guesses
+    xhat[0] = 0.0
+    P[0] = 1.0
+    
+    for k in range(1,n_iter):
+        # time update
+        xhatminus[k] = xhat[k-1]
+        Pminus[k] = P[k-1]+Q
+    
+        # measurement update
+        K[k] = Pminus[k]/( Pminus[k]+R )
+        xhat[k] = xhatminus[k]+K[k]*(z[k]-xhatminus[k])
+        P[k] = (1-K[k])*Pminus[k]
+    return xhat
 
-R = 0.17**2 # estimate of measurement variance, change to see effect
-
-# intial guesses
-xhat[0] = 0.0
-P[0] = 1.0
-
-for k in range(1,n_iter):
-    # time update
-    xhatminus[k] = xhat[k-1]
-    Pminus[k] = P[k-1]+Q
-
-    # measurement update
-    K[k] = Pminus[k]/( Pminus[k]+R )
-    xhat[k] = xhatminus[k]+K[k]*(z[k]-xhatminus[k])
-    P[k] = (1-K[k])*Pminus[k]
+def func2(prev_est):
+    #z = np.genfromtxt("rpm.csv", delimiter=",")
+    n_iter = len(z)
+    sz = (n_iter,) # size of array
+    #x = -0.37727 # truth value (typo in example at top of p. 13 calls this z)
+    #z = np.random.normal(x,0.1,size=sz) # observations (normal about x, sigma=0.1)
+    
+    Q = 1e-4 # process variance
+    
+    # allocate space for arrays
+    xhat=np.zeros(sz)      # a posteri estimate of x
+    P=np.zeros(sz)         # a posteri error estimate
+    xhatminus=np.zeros(sz) # a priori estimate of x
+    Pminus=np.zeros(sz)    # a priori error estimate
+    K=np.zeros(sz)         # gain or blending factor
+    
+    R = 0.2**2 # estimate of measurement variance, change to see effect
+    
+    # intial guesses
+    xhat[0] = 0.0
+    P[0] = 1.0
+    
+    for k in range(1,n_iter):
+        # time update
+        xhatminus[k] = xhat[k-1] + (prev_est[k] - prev_est[k-1])
+        Pminus[k] = P[k-1]+Q
+    
+        # measurement update
+        K[k] = Pminus[k]/( Pminus[k]+R )
+        xhat[k] = xhatminus[k]+K[k]*(z[k]-xhatminus[k])
+        P[k] = (1-K[k])*Pminus[k]
+    return xhat
 
 plt.figure()
 plt.plot(z,'k+',label='noisy measurements')
-plt.plot(xhat,'b-',label='a posteri estimate')
+plt.plot(func1(),'b-',label='a posteri estimate')
+plt.plot(func2(func1()),'r-',label='a posteri estimate with previous knowledge')
 #plt.plot(motorPower,label='optimal rpm')
 #plt.axhline(x,color='g',label='truth value')
 plt.legend()
